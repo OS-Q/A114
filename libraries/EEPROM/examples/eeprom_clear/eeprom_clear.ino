@@ -26,7 +26,7 @@ void setup() {
     This will make your code portable to all AVR processors.
   ***/
 
-  for (unsigned int i = 0 ; i < EEPROM.length() ; i++) {
+  for (int i = 0 ; i < EEPROM.length() ; i++) {
     EEPROM.write(i, 0);
   }
 

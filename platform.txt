@@ -3,10 +3,10 @@
 # ------------------------------
 #
 # For more info:
-# https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5-3rd-party-Hardware-specification
+# https://arduino.github.io/arduino-cli/latest/platform-specification/
 
-name=MegaCoreX
-version=1.0.6
+name=Arduino megaAVR Boards
+version=1.8.7
 
 # AVR compile variables
 # ---------------------
@@ -30,8 +30,6 @@ compiler.ar.cmd=avr-gcc-ar
 compiler.ar.flags=rcs
 compiler.objcopy.cmd=avr-objcopy
 compiler.objcopy.eep.flags=-O ihex -j .eeprom --set-section-flags=.eeprom=alloc,load --no-change-warnings --change-section-lma .eeprom=0
-compiler.objdump.cmd=avr-objdump
-compiler.objdump.flags=--disassemble --source --line-numbers --demangle --section=.text
 compiler.elf2hex.flags=-O ihex -R .eeprom
 compiler.elf2hex.bin.flags=-O binary -R .eeprom
 compiler.elf2hex.cmd=avr-objcopy
@@ -73,28 +71,11 @@ recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.f
 ## Create output files (.eep and .hex)
 recipe.objcopy.eep.pattern="{compiler.path}{compiler.objcopy.cmd}" {compiler.objcopy.eep.flags} {compiler.objcopy.eep.extra_flags} "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.eep"
 recipe.objcopy.hex.pattern="{compiler.path}{compiler.elf2hex.cmd}" {compiler.elf2hex.flags} {compiler.elf2hex.extra_flags} "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.hex"
-
-## Save disassembler listing
-recipe.hooks.objcopy.postobjcopy.1.pattern.windows=cmd /C "{compiler.path}{compiler.objdump.cmd}" {compiler.objdump.flags} "{build.path}/{build.project_name}.elf" > "{build.path}/{build.project_name}_{build.mcu}_{build.f_cpu}.lst"
-recipe.hooks.objcopy.postobjcopy.1.pattern.linux=chmod +x "{runtime.platform.path}/scripts/create_disassembler_listing.sh"
-recipe.hooks.objcopy.postobjcopy.1.pattern.macosx=chmod +x "{runtime.platform.path}/scripts/create_disassembler_listing.sh"
-recipe.hooks.objcopy.postobjcopy.2.pattern.linux="{runtime.platform.path}/scripts/create_disassembler_listing.sh" "{compiler.path}{compiler.objdump.cmd}" "{compiler.objdump.flags}" "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}_{build.mcu}_{build.f_cpu}.lst"
-recipe.hooks.objcopy.postobjcopy.2.pattern.macosx="{runtime.platform.path}/scripts/create_disassembler_listing.sh" "{compiler.path}{compiler.objdump.cmd}" "{compiler.objdump.flags}" "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}_{build.mcu}_{build.f_cpu}.lst"
+recipe.objcopy.bin.pattern="{compiler.path}{compiler.elf2hex.cmd}" {compiler.elf2hex.bin.flags} {compiler.elf2hex.extra_flags} "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.bin"
 
 ## Save hex
 recipe.output.tmp_file={build.project_name}.hex
-recipe.output.save_file={build.project_name}_{build.mcu}_{build.f_cpu}.hex
-
-## Save hex
-recipe.hooks.savehex.presavehex.1.pattern.windows="{runtime.platform.path}/scripts/delete_merged_output.bat" {build.export_merged_output} "{build.path}\{build.project_name}.with_bootloader.hex"
-recipe.hooks.savehex.presavehex.2.pattern.windows=cmd /C copy "{build.path}\{build.project_name}_{build.mcu}_{build.f_cpu}.lst" "{sketch_path}"
-recipe.hooks.savehex.presavehex.1.pattern.linux=chmod +x "{runtime.platform.path}/scripts/delete_merged_output.sh"
-recipe.hooks.savehex.presavehex.2.pattern.linux="{runtime.platform.path}/scripts/delete_merged_output.sh" {build.export_merged_output} "{build.path}/{build.project_name}.with_bootloader.hex"
-recipe.hooks.savehex.presavehex.3.pattern.linux=cp "{build.path}/{build.project_name}_{build.mcu}_{build.f_cpu}.lst" "{sketch_path}"
-recipe.hooks.savehex.presavehex.1.pattern.macosx=chmod +x "{runtime.platform.path}/scripts/delete_merged_output.sh"
-recipe.hooks.savehex.presavehex.2.pattern.macosx="{runtime.platform.path}/scripts/delete_merged_output.sh" {build.export_merged_output} "{build.path}/{build.project_name}.with_bootloader.hex"
-recipe.hooks.savehex.presavehex.3.pattern.macosx=cp "{build.path}/{build.project_name}_{build.mcu}_{build.f_cpu}.lst" "{sketch_path}"
-
+recipe.output.save_file={build.project_name}.{build.variant}.hex
 
 ## Compute size
 recipe.size.pattern="{compiler.path}{compiler.size.cmd}" -A "{build.path}/{build.project_name}.elf"
@@ -112,54 +93,37 @@ recipe.preproc.macros="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {
 # AVR Uploader/Programmers tools
 # ------------------------------
 
-tools.avrdude.path={runtime.tools.avrdude.path}
-tools.avrdude.cmd.path={runtime.tools.avrdude.path}/bin/avrdude
-tools.avrdude.config.path={runtime.platform.path}/avrdude.conf
+tools.avrdude.path={runtime.tools.avrdude-6.3.0-arduino17.path}
+tools.avrdude.cmd.path={path}/bin/avrdude
+tools.avrdude.config.path={path}/etc/avrdude.conf
 
-tools.avrdude.network_cmd={runtime.tools.arduinoOTA.path}/bin/arduinoOTA
+tools.avrdude.network_cmd={runtime.tools.arduinoOTA-1.3.0.path}/bin/arduinoOTA
 
 tools.avrdude.upload.params.verbose=-v
 tools.avrdude.upload.params.quiet=-q -q
 # tools.avrdude.upload.verify is needed for backwards compatibility with IDE 1.6.8 or older, IDE 1.6.9 or newer overrides this value
 tools.avrdude.upload.verify=
 tools.avrdude.upload.params.noverify=-V
-tools.avrdude.upload.pattern="{cmd.path}" "-C{config.path}" {upload.verbose} {upload.verify} -p{build.mcu} -c{upload.protocol} -P{serial.port} -b{upload.speed} -D "-Uflash:w:{build.path}/{build.project_name}.hex:i"
-
-# Kind of a hacky way to implement support for the Nano every, where the IDE requires an upload sequence to perform 1200bps touch
-tools.avrdude_nanoevery.upload.params.verbose=-v
-tools.avrdude_nanoevery.upload.params.quiet=-q -q
-tools.avrdude_nanoevery.upload.verify=
-tools.avrdude_nanoevery.upload.params.noverify=-V
-tools.avrdude_nanoevery.upload.pattern="{runtime.tools.avrdude.path}/bin/avrdude" "-C{runtime.platform.path}/avrdude.conf" {upload.verbose} {upload.verify} -p{build.mcu} -c{upload.protocol} {program.extra_params} "-Uflash:w:{build.path}/{build.project_name}.hex:i" {bootloader.fuse0} {bootloader.fuse1} {bootloader.fuse2} {bootloader.fuse4} {bootloader.fuse5} {bootloader.fuse6} {bootloader.fuse7} {bootloader.fuse8} {bootloader.lock}
+tools.avrdude.upload.pattern="{cmd.path}" "-C{config.path}" {upload.verbose} {upload.verify} -p{build.mcu} -c{upload.protocol} {upload.extra_params}  -b{upload.speed} -e -D "-Uflash:w:{build.path}/{build.project_name}.hex:i" "-Ufuse2:w:{bootloader.OSCCFG}:m" "-Ufuse5:w:{bootloader.SYSCFG0}:m" "-Ufuse8:w:{bootloader.BOOTEND}:m" {upload.extra_files}
 
 tools.avrdude.program.params.verbose=-v
 tools.avrdude.program.params.quiet=-q -q
 # tools.avrdude.program.verify is needed for backwards compatibility with IDE 1.6.8 or older, IDE 1.6.9 or newer overrides this value
 tools.avrdude.program.verify=
 tools.avrdude.program.params.noverify=-V
-tools.avrdude.program.pattern="{cmd.path}" "-C{config.path}" {program.verbose} {program.verify} -p{build.mcu} -c{protocol} {program.extra_params} "-Uflash:w:{build.path}/{build.project_name}.with_bootloader.hex:i" {bootloader.fuse0} {bootloader.fuse1} {bootloader.fuse2} {bootloader.fuse4} {bootloader.fuse5} {bootloader.fuse6} {bootloader.fuse7} {bootloader.fuse8} {bootloader.lock}
+tools.avrdude.program.pattern="{cmd.path}" "-C{config.path}" {program.verbose} {program.verify} -p{build.mcu} -c{protocol} {program.extra_params} "-Uflash:w:{build.path}/{build.project_name}.hex:i" "-Ufuse2:w:{bootloader.OSCCFG}:m" "-Ufuse5:w:{bootloader.SYSCFG0}:m" "-Ufuse8:w:{bootloader.BOOTEND}:m" {upload.extra_files}
 
 tools.avrdude.erase.params.verbose=-v
 tools.avrdude.erase.params.quiet=-q -q
-tools.avrdude.erase.pattern="{cmd.path}" "-C{config.path}" -v -p{build.mcu} -c{protocol} {program.extra_params} -e {bootloader.fuse0} {bootloader.fuse1} {bootloader.fuse2} {bootloader.fuse4} {bootloader.fuse5} {bootloader.fuse6} {bootloader.fuse7} {bootloader.fuse8} {bootloader.lock}
-
-tools.avrdude.bootloader.fuse0="-Ufuse0:w:{bootloader.WDTCFG}:m"
-tools.avrdude.bootloader.fuse1="-Ufuse1:w:{bootloader.BODCFG}:m"
-tools.avrdude.bootloader.fuse2="-Ufuse2:w:{bootloader.OSCCFG}:m"
-tools.avrdude.bootloader.fuse4="-Ufuse4:w:{bootloader.TCD0CFG}:m"
-tools.avrdude.bootloader.fuse5="-Ufuse5:w:{bootloader.SYSCFG0}:m"
-tools.avrdude.bootloader.fuse6="-Ufuse6:w:{bootloader.SYSCFG1}:m"
-tools.avrdude.bootloader.fuse7="-Ufuse7:w:{bootloader.APPEND}:m"
-tools.avrdude.bootloader.fuse8="-Ufuse8:w:{bootloader.BOOTEND}:m"
-tools.avrdude.bootloader.lock="-Ulock:w:{bootloader.LOCKBIT}:m"
+tools.avrdude.erase.pattern=
 
 tools.avrdude.bootloader.params.verbose=-v
 tools.avrdude.bootloader.params.quiet=-q -q
-tools.avrdude.bootloader.pattern="{cmd.path}" "-C{config.path}" -v -p{build.mcu} -c{protocol} {program.extra_params} "-Uflash:w:{runtime.platform.path}/bootloaders/{bootloader.file}:i"
+tools.avrdude.bootloader.pattern="{cmd.path}" "-C{config.path}" {bootloader.verbose} -p{build.mcu} -c{protocol} {program.extra_params} "-Ufuse2:w:{bootloader.OSCCFG}:m" "-Ufuse5:w:{bootloader.SYSCFG0}:m" "-Ufuse8:w:{bootloader.BOOTEND}:m" "-Uflash:w:{runtime.platform.path}/bootloaders/{bootloader.file}:i"
 
 tools.avrdude_remote.upload.pattern=/usr/bin/run-avrdude /tmp/sketch.hex {upload.verbose} -p{build.mcu}
 
-tools.avrdude.upload.network_pattern="{network_cmd}" -address {serial.port} -port {upload.network.port} -sketch "{build.path}/{build.project_name}.hex" -upload {upload.network.endpoint_upload} -sync {upload.network.endpoint_sync} -reset {upload.network.endpoint_reset} -sync_exp {upload.network.sync_return}
+tools.avrdude.upload.network_pattern="{network_cmd}" -address {serial.port} -port 65280 -username arduino -password "{network.password}" -sketch "{build.path}/{build.project_name}.bin" -upload /sketch -d -v
 
 # USB Default Flags
 # Default blank usb manufacturer will be filled in at compile time

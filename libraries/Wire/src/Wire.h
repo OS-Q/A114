@@ -23,20 +23,14 @@
 #define TwoWire_h
 
 #include <Arduino.h>
+#include <api/HardwareI2C.h>
 
-#if ((RAMEND - RAMSTART) < 1023)
-#define BUFFER_LENGTH 16
-#elif ((RAMEND - RAMSTART) < 4095)
-#define BUFFER_LENGTH 32
-#elif ((RAMEND - RAMSTART) < 8191)
-#define BUFFER_LENGTH 64
-#else
 #define BUFFER_LENGTH 128
-#endif
 
 // WIRE_HAS_END means Wire has end()
 #define WIRE_HAS_END 1
-class TwoWire : public Stream
+
+class TwoWire : public HardwareI2C
 {
   private:
     static uint8_t rxBuffer[];
@@ -49,49 +43,42 @@ class TwoWire : public Stream
     static uint8_t txBufferLength;
 
     static uint8_t transmitting;
-    static void (*user_onRequest)();
+    static void (*user_onRequest)(void);
     static void (*user_onReceive)(int);
-    static uint8_t onRequestService();
+    static uint8_t onRequestService(void);
     static void onReceiveService(int);
-
   public:
     TwoWire();
-    bool pins(uint8_t sda_pin, uint8_t scl_pin);
-    bool swap(uint8_t state = 1);
     void begin();
-    void begin(uint8_t address);
-    void begin(int address);
-    void begin(uint8_t address, bool receive_broadcast, uint8_t second_address);
-    void begin(int address, bool receive_broadcast, uint8_t second_address);
-    void begin(uint8_t address, bool receive_broadcast);
-    void begin(int address, bool receive_broadcast);
+    void begin(uint8_t);
+    void begin(int);
     void end();
-    void setClock(uint32_t frequency);
-    void beginTransmission(uint8_t address);
-    void beginTransmission(int address);
-    uint8_t endTransmission();
-    uint8_t endTransmission(bool sendStop);
-    uint8_t requestFrom(uint8_t address, size_t quantity, bool sendStop);
-    uint8_t requestFrom(int address, int quantity, int sendStop);
-    uint8_t requestFrom(uint8_t address, size_t quantity);
-    uint8_t requestFrom(uint8_t address, uint8_t quantity);
-    uint8_t requestFrom(int address, int quantity);
-    virtual size_t write(uint8_t data);
-    virtual size_t write(const uint8_t *data, size_t quantity);
-    virtual int available();
-    virtual int read();
-    virtual int peek();
-    virtual void flush();
-    void onReceive(void (*)(int));
-    void onRequest(void (*)(void));
+    void setClock(uint32_t);
+    void beginTransmission(uint8_t);
+    void beginTransmission(int);
+    uint8_t endTransmission(void);
+    uint8_t endTransmission(bool);
+    size_t requestFrom(uint8_t, size_t);
+    size_t requestFrom(uint8_t, size_t, bool);
+    size_t requestFrom(int, int);
+    size_t requestFrom(int, int, int);
+    virtual size_t write(uint8_t);
+    virtual size_t write(const uint8_t *, size_t);
+    virtual int available(void);
+    virtual int read(void);
+    virtual int peek(void);
+    virtual void flush(void);
+    void onReceive( void (*)(int) );
+    void onRequest( void (*)(void) );
 
-    inline size_t write(unsigned long data) { return write((uint8_t)data); }
-    inline size_t write(long data) { return write((uint8_t)data); }
-    inline size_t write(unsigned int data) { return write((uint8_t)data); }
-    inline size_t write(int data) { return write((uint8_t)data); }
+    inline size_t write(unsigned long n) { return write((uint8_t)n); }
+    inline size_t write(long n) { return write((uint8_t)n); }
+    inline size_t write(unsigned int n) { return write((uint8_t)n); }
+    inline size_t write(int n) { return write((uint8_t)n); }
     using Print::write;
 };
 
 extern TwoWire Wire;
 
 #endif
+

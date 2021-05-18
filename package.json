@@ -1,7 +1,7 @@
 {
   "name": "A114",
-  "version": "1.0.7",
-  "description": "Arduino Wiring-based Framework for Microchip megaAVR microcontrollers (MegaCoreX)",
+  "version": "1.8.7",
+  "description": "Arduino Wiring-based Framework for Microchip megaAVR microcontrollers",
   "keywords": [
     "framework",
     "arduino",
@@ -11,7 +11,6 @@
   "license": "LGPL-2.1-or-later",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MCUdude/MegaCoreX"
+    "url": "https://github.com/arduino/ArduinoCore-megaavr"
   }
 }
-

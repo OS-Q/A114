@@ -19,7 +19,7 @@ void setup() {
     Iterate the EEPROM using a for loop.
   ***/
 
-  for (unsigned int index = 0 ; index < EEPROM.length() ; index++) {
+  for (int index = 0 ; index < EEPROM.length() ; index++) {
 
     //Add one to each cell in the EEPROM
     EEPROM[ index ] += 1;
@@ -29,7 +29,7 @@ void setup() {
     Iterate the EEPROM using a while loop.
   ***/
 
-  unsigned int index = 0;
+  int index = 0;
 
   while (index < EEPROM.length()) {
 
@@ -42,7 +42,7 @@ void setup() {
     Iterate the EEPROM using a do-while loop.
   ***/
 
-  unsigned int idx = 0;  //Used 'idx' to avoid name conflict with 'index' above.
+  int idx = 0;  //Used 'idx' to avoid name conflict with 'index' above.
 
   do {
 

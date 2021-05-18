@@ -9,7 +9,7 @@
 #include <EEPROM.h>
 
 // start reading from the first byte (address 0) of the EEPROM
-unsigned int address = 0;
+int address = 0;
 byte value;
 
 void setup() {
